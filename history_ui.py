@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import datetime
-from models.sale import get_sales_history
+from sale import get_sales_history
 
 
 def open_history_window():

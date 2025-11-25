@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 
-from ui.main_ui import start_main_ui
+from main_ui import start_main_ui
 
 USERS = {
     "admin": "admin123",

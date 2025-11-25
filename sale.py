@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 
-from database.db import get_product_by_name, record_sale
+from db import get_product_by_name, record_sale
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SALES_FILE = os.path.join(BASE_DIR, "sales_history.json")

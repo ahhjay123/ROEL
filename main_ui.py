@@ -449,7 +449,7 @@ def start_main_ui():
         items = cart.items.copy()
 
         def finished(method, paid, change, discount_type, discount_amount):
-            from ui.receipt_ui import open_receipt_window
+            from receipt_ui import open_receipt_window
 
             final_total = total - discount_amount
 

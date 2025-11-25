@@ -6,7 +6,7 @@ from tkinter import filedialog, messagebox
 import customtkinter as ctk
 from PIL import Image, ImageTk
 
-from database.db import add_product
+from db import add_product
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 IMAGES_DIR = os.path.join(BASE_DIR, "images")
