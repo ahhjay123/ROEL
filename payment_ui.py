@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 
-DISCOUNT_RATE = 0.20
+DISCOUNT_RATE = 0.10
 
 
 def ask_payment_method(total_amount, callback):
@@ -49,7 +49,7 @@ def ask_payment_method(total_amount, callback):
 
     senior_check = ctk.CTkCheckBox(
         discount_frame,
-        text="Senior Citizen (20% OFF)",
+        text="Senior Citizen (10% OFF)",
         variable=senior_var,
         command=lambda: enforce_single_discount(senior_var, pwd_var)
     )
@@ -57,7 +57,7 @@ def ask_payment_method(total_amount, callback):
 
     pwd_check = ctk.CTkCheckBox(
         discount_frame,
-        text="PWD (20% OFF)",
+        text="PWD (10% OFF)",
         variable=pwd_var,
         command=lambda: enforce_single_discount(pwd_var, senior_var)
     )
