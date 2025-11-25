@@ -283,9 +283,10 @@ def start_main_ui():
         try:
             img = Image.open(img_path)
             img.thumbnail((150, 150))
-            tk_img = ImageTk.PhotoImage(img)
-            preview_image_label.configure(image=tk_img, text="")
+            tk_img = ctk.CTkImage(light_image=img, size=(150, 150))
             preview_image_label.image = tk_img
+            preview_image_label.configure(image=tk_img, text="")
+
         except Exception:
             preview_image_label.configure(text="Image Error", image=None)
             preview_image_label.image = None
@@ -338,9 +339,10 @@ def start_main_ui():
                 try:
                     img = Image.open(img_path)
                     img.thumbnail((120, 100))
-                    tk_img = ImageTk.PhotoImage(img)
-                    img_label.configure(image=tk_img, text="")
+                    tk_img = ctk.CTkImage(light_image=img, size=(120, 100))
                     img_label.image = tk_img
+                    img_label.configure(image=tk_img, text="")
+
                 except Exception:
                     img_label.configure(text="Image Error")
             else:
@@ -373,9 +375,14 @@ def start_main_ui():
                 highlight_selected_card()
                 update_selected_preview()
 
-            card.bind("<Button-1>", lambda e, _n=p["name"]: on_select(_n))
+            def bind_card_click(widget, name):
+                widget.bind("<Button-1>", lambda e: on_select(name))
+                widget.bindtags((widget, "CTkBaseClass", ".", "all"))
+
+            bind_card_click(card, p["name"])
             for child in card.winfo_children():
-                child.bind("<Button-1>", lambda e, _n=p["name"]: on_select(_n))
+                bind_card_click(child, p["name"])
+
 
             select_btn = ctk.CTkButton(
                 card,
@@ -400,9 +407,21 @@ def start_main_ui():
     def on_category_change(value):
         current_category["value"] = value
         build_product_cards(value)
-        selected_product_name["name"] = None
-        update_selected_preview()
-        highlight_selected_card()
+
+        rows = get_products(category=value)
+
+        if rows:
+            first = rows[0]["name"]
+            selected_product_name["name"] = first
+            highlight_selected_card()
+            update_selected_preview()
+        else:
+            selected_product_name["name"] = None
+            preview_image_label.image = None
+            preview_image_label.configure(text="", image=None)
+            selected_name_label.configure(text="No product selected")
+            selected_price_label.configure(text="Price: -")
+            selected_stock_label.configure(text="Stock: -")
 
     cat_segment.configure(command=on_category_change)
     build_product_cards(categories[0])
