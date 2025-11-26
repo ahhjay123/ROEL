@@ -143,9 +143,12 @@ def open_add_product_window():
                 messagebox.showwarning("Image Error", f"Image not saved: {e}")
                 stored_path = None
 
-        add_product(name, category, price, stock, stored_path)
-        messagebox.showinfo("Success", f"Product '{name}' added.")
-        window.destroy()
+        try:
+            add_product(name, category, price, stock, stored_path)
+            messagebox.showinfo("Success", f"Product '{name}' added.")
+            window.destroy()
+        except ValueError as e:
+            messagebox.showerror("Duplicate Product", str(e))
 
     ctk.CTkButton(
         main_frame,

@@ -61,6 +61,10 @@ class DatabaseManager:
         conn = self.connect()
         cursor = conn.cursor()
 
+        if self.product_exists(product.name):
+            conn.close()
+            raise ValueError(f"Product '{product.name}' already exists.")
+
         cursor.execute(
             """
             INSERT INTO products (name, category, price, stock, image_path)
@@ -167,9 +171,17 @@ class DatabaseManager:
             """,
             (product_id, quantity, total, date_str),
         )
-
+    
         conn.commit()
         conn.close()
+
+    def product_exists(self, name):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM products WHERE name = ? LIMIT 1", (name,))
+        exists = cursor.fetchone() is not None
+        conn.close()
+        return exists
 
 _db = DatabaseManager(DB_PATH, BASE_DIR)
 
@@ -183,7 +195,10 @@ def print_db_location():
     print("Using DB:", DB_PATH)
 
 def add_product(name, category, price, stock, image_path=None):
-    _db.add_product(Product(name, category, price, stock, image_path))
+    try:
+        _db.add_product(Product(name, category, price, stock, image_path))
+    except ValueError as e:
+        raise e
 
 def get_products(category=None):
     return _db.get_products(category)
