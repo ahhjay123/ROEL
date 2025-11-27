@@ -19,6 +19,7 @@ from invoice import generate_invoice_pdf
 from add_product_ui import open_add_product_window
 from history_ui import open_history_window
 from payment_ui import ask_payment_method
+from sales_ui import open_sales_window
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LOW_STOCK_THRESHOLD = 3
@@ -665,6 +666,7 @@ def start_main_ui():
 
     _sidebar_button("🧾", 1, command=open_history_window)
     _sidebar_button("🛠️", 3, command=open_product_management)
+    _sidebar_button("📊", 4, command=open_sales_window)
     _sidebar_button("🚪", 2, command=app.destroy)
 
     ctk.CTkButton(
