@@ -1,9 +1,6 @@
 import customtkinter as ctk
 from tkinter import messagebox
 
-DISCOUNT_RATE = 0.10
-
-
 def ask_payment_method(total_amount, callback):
     window = ctk.CTkToplevel()
     window.title("Select Payment Method")
@@ -37,56 +34,6 @@ def ask_payment_method(total_amount, callback):
 
     ctk.CTkLabel(
         main,
-        text="Discount Options:",
-        font=("Arial Rounded MT Bold", 14),
-    ).pack(pady=(0, 4))
-
-    discount_frame = ctk.CTkFrame(main, fg_color="transparent")
-    discount_frame.pack(anchor="w", padx=20, pady=(0, 10))
-
-    senior_var = ctk.BooleanVar()
-    pwd_var = ctk.BooleanVar()
-
-    senior_check = ctk.CTkCheckBox(
-        discount_frame,
-        text="Senior Citizen (10% OFF)",
-        variable=senior_var,
-        command=lambda: enforce_single_discount(senior_var, pwd_var)
-    )
-    senior_check.grid(row=0, column=0, sticky="w")
-
-    pwd_check = ctk.CTkCheckBox(
-        discount_frame,
-        text="PWD (10% OFF)",
-        variable=pwd_var,
-        command=lambda: enforce_single_discount(pwd_var, senior_var)
-    )
-    pwd_check.grid(row=1, column=0, sticky="w")
-
-    def enforce_single_discount(a, b):
-        if a.get():
-            b.set(False)
-        recalc_discount()
-
-    def recalc_discount():
-        discount_type = None
-        discount_amount = 0.0
-        final_total = total_amount
-
-        if senior_var.get():
-            discount_type = "SENIOR"
-        elif pwd_var.get():
-            discount_type = "PWD"
-
-        if discount_type:
-            discount_amount = round(total_amount * DISCOUNT_RATE, 2)
-            final_total = round(total_amount - discount_amount, 2)
-
-        total_label.configure(text=f"Amount Due: ₱{final_total:.2f}")
-        return discount_type, discount_amount, final_total
-
-    ctk.CTkLabel(
-        main,
         text="Choose a payment method:",
         font=("Arial", 13),
         text_color="#9ca3af",
@@ -97,21 +44,13 @@ def ask_payment_method(total_amount, callback):
     btn_row.grid_columnconfigure((0, 1, 2), weight=1)
 
     def pay(method):
-        discount_type, discount_amount, final_total = recalc_discount()
         window.destroy()
 
         if method == "Cash":
-            ask_cash_amount(
-                final_total, callback, discount_type, discount_amount
-            )
+            ask_cash_amount(total_amount, callback)
         else:
-            callback(
-                method,
-                final_total,
-                0.00,
-                discount_type,
-                discount_amount
-            )
+            callback(method, total_amount, 0.00, None, 0.0)
+
 
     ctk.CTkButton(btn_row, text="💵  Cash", height=40,
         corner_radius=10, command=lambda: pay("Cash")).grid(row=0, column=0, padx=4)
@@ -123,7 +62,7 @@ def ask_payment_method(total_amount, callback):
         corner_radius=10, command=lambda: pay("GCash")).grid(row=0, column=2, padx=4)
 
 
-def ask_cash_amount(total_amount, callback, discount_type=None, discount_amount=0.0):
+def ask_cash_amount(total_amount, callback):
     window = ctk.CTkToplevel()
     window.title("Cash Payment")
     window.geometry("400x240")
@@ -172,8 +111,8 @@ def ask_cash_amount(total_amount, callback, discount_type=None, discount_amount=
         change = round(cash - total_amount, 2)
 
         window.destroy()
-        callback("Cash", cash, change, discount_type, discount_amount)
-
+        callback("Cash", cash, change, None, 0.0)
+        
     ctk.CTkButton(
         main,
         text="Confirm Payment",

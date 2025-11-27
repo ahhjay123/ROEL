@@ -1,6 +1,10 @@
 class Cart:
     def __init__(self):
         self.items = []
+    
+    def remove(self, index):
+        if 0 <= index < len(self.items):
+            del self.items[index]
 
     def add(self, product_name, quantity, total):
         self.items.append((product_name, quantity, total))
