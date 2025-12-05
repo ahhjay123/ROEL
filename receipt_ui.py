@@ -5,16 +5,17 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def open_receipt_window(
-    invoice_no,
-    date_str,
-    items,
-    total_price,
-    payment_method,
-    paid,
-    change,
-    discount_type=None,
-    discount_amount=0.0
+        invoice_no,
+        date_str,
+        customer_name,
+        items,
+        total_price,
+        payment_method,
+        paid,
+        change,
 ):
+
+
     window = ctk.CTkToplevel()
     window.title("Receipt / Invoice")
     window.geometry("520x640")
@@ -49,11 +50,19 @@ def open_receipt_window(
         font=("Arial", 11),
     ).grid(row=1, column=0, pady=(0, 10), sticky="n")
 
+    ctk.CTkLabel(
+        main,
+        text=f"Customer: {customer_name}",
+        font=("Arial Rounded MT Bold", 14)
+    ).grid(row=2, column=0, pady=(0, 10), sticky="n")
+
     box = ctk.CTkTextbox(main, width=500, height=520, corner_radius=10)
-    box.grid(row=2, column=0, pady=(4, 6), sticky="nsew")
+    box.grid(row=3, column=0, pady=(4, 6), sticky="nsew")
 
     box.insert("end", "Items Purchased:\n")
+    box.insert("end", f"Customer Name: {customer_name}\n")
     box.insert("end", "-" * 50 + "\n")
+
 
     original_total = 0
     for name, qty, total in items:
@@ -61,18 +70,9 @@ def open_receipt_window(
         box.insert("end", f"{name} x{qty} - ₱{total:.2f}\n")
 
     box.insert("end", "-" * 50 + "\n")
-
     box.insert("end", f"Original Total: ₱{original_total:.2f}\n")
-
-    if discount_amount > 0 and discount_type:
-        box.insert("end", f"Discount Type: {discount_type}\n")
-        box.insert("end", f"Discount Amount: -₱{discount_amount:.2f}\n")
-        box.insert("end", f"Final Total: ₱{total_price:.2f}\n")
-    else:
-        box.insert("end", f"Final Total: ₱{total_price:.2f}\n")
-
+    box.insert("end", f"Final Total: ₱{total_price:.2f}\n")
     box.insert("end", "-" * 50 + "\n")
-
     box.insert("end", f"Payment Method: {payment_method}\n")
 
     if payment_method == "Cash":

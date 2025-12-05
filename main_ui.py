@@ -19,6 +19,7 @@ from invoice import generate_invoice_pdf
 from add_product_ui import open_add_product_window
 from history_ui import open_history_window
 from payment_ui import ask_payment_method
+from sales_ui import open_sales_window
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LOW_STOCK_THRESHOLD = 3
@@ -207,8 +208,16 @@ def start_main_ui():
     )
     total_label.grid(row=2, column=0, sticky="e", padx=12, pady=(0, 8))
 
+    customer_name_entry = ctk.CTkEntry(
+        cart_panel,
+        placeholder_text="Customer Name",
+        height=35,
+        corner_radius=8,
+    )
+    customer_name_entry.grid(row=3, column=0, padx=12, pady=(0, 10), sticky="ew")
+
     cart_btn_frame = ctk.CTkFrame(cart_panel, fg_color="transparent")
-    cart_btn_frame.grid(row=3, column=0, padx=8, pady=(0, 10), sticky="ew")
+    cart_btn_frame.grid(row=4, column=0, padx=8, pady=(0, 10), sticky="ew")
     cart_btn_frame.grid_rowconfigure((0, 1), weight=0)
     cart_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
@@ -253,6 +262,23 @@ def start_main_ui():
                 text=f"Qty: {qty}   •   Line: ₱{total:.2f}",
                 font=("Arial", 12),
             ).grid(row=1, column=0, sticky="w", padx=8, pady=(0, 6))
+
+            def remove_item(i=idx):
+                cart.remove(i)
+                render_cart_ui()
+                refresh_total()
+
+            remove_btn = ctk.CTkButton(
+                item_frame,
+                text="Remove",
+                fg_color="#b91c1c",
+                hover_color="#7f1111",
+                width=80,
+                height=26,
+                corner_radius=8,
+                command=remove_item
+            )
+            remove_btn.grid(row=0, column=1, rowspan=2, padx=6, pady=6)
 
     def update_selected_preview():
         name = selected_product_name["name"]
@@ -460,27 +486,28 @@ def start_main_ui():
         refresh_total()
 
     def checkout():
-        if not cart.items:
-            messagebox.showerror("Error", "Cart is empty.")
+        customer_name = customer_name_entry.get().strip()
+        if not customer_name:
+            messagebox.showerror("Error", "Please enter customer name.")
             return
 
         total = cart.get_total()
         items = cart.items.copy()
 
-        def finished(method, paid, change, discount_type, discount_amount):
+        def finished(method, paid, change):
             from receipt_ui import open_receipt_window
 
-            final_total = total - discount_amount
+            final_total = total
 
             invoice_no = save_invoice(
+                customer_name,
                 items,
                 final_total,
                 method,
                 paid,
                 change,
-                discount_type,
-                discount_amount
             )
+
 
             for name, qty, _ in items:
                 try:
@@ -496,7 +523,6 @@ def start_main_ui():
                 generate_invoice_pdf(
                     invoice_no, date, items_dict,
                     final_total, method, paid, change,
-                    discount_type, discount_amount
                 )
             except Exception:
                 pass
@@ -507,10 +533,10 @@ def start_main_ui():
             build_product_cards(current_category["value"])
 
             open_receipt_window(
-                invoice_no, date, items,
-                final_total, method, paid, change,
-                discount_type, discount_amount
-            )
+            invoice_no, date, customer_name, items,
+            final_total, method, paid, change,
+        )
+
 
         ask_payment_method(total, finished)
 
@@ -594,18 +620,62 @@ def start_main_ui():
         update_selected_preview()
         build_product_cards(current_category["value"])
 
-    def run_repair():
-        repaired = repair_image_paths()
-        messagebox.showinfo(
-            "DB Repair Complete",
-            f"Fixed {repaired} corrupted image entr{'y' if repaired == 1 else 'ies'}."
-        )
-        build_product_cards(current_category["value"])
-        update_selected_preview()
+    
+    def open_product_management():
+        pm_window = ctk.CTkToplevel()
+        pm_window.title("Product Management")
+        pm_window.geometry("420x330")
 
-    _sidebar_button("➕", 0, command=open_add_product_window)
+        pm_window.update_idletasks()
+        w, h = 420, 330
+        x = (pm_window.winfo_screenwidth() // 2) - (w // 2)
+        y = (pm_window.winfo_screenheight() // 2) - (h // 2)
+        pm_window.geometry(f"{w}x{h}+{x}+{y}")
+
+        pm_window.lift()
+        pm_window.focus_force()
+        pm_window.grab_set()
+
+        frame = ctk.CTkFrame(pm_window, corner_radius=12)
+        frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        ctk.CTkLabel(
+            frame,
+            text="Product Management",
+            font=("Arial Rounded MT Bold", 20)
+        ).pack(pady=10)
+
+        ctk.CTkButton(
+            frame,
+            text="Add Product",
+            fg_color="#1f6aa5",
+            hover_color="#155c8e",
+            corner_radius=10,
+            command=open_add_product_window
+        ).pack(fill="x", pady=6)
+
+        ctk.CTkButton(
+            frame,
+            text="Add Stock",
+            fg_color="orange",
+            hover_color="#cc8400",
+            corner_radius=10,
+            command=add_stock_popup
+        ).pack(fill="x", pady=6)
+
+        ctk.CTkButton(
+            frame,
+            text="Delete Product",
+            fg_color="#b91c1c",
+            hover_color="#7f1111",
+            corner_radius=10,
+            command=delete_selected_product
+        ).pack(fill="x", pady=6)
+
     _sidebar_button("🧾", 1, command=open_history_window)
-    _sidebar_button("🚪", 2, command=app.destroy)
+    _sidebar_button("🛠️", 2, command=open_product_management)
+    _sidebar_button("📊", 3, command=open_sales_window)
+    _sidebar_button("🚪", 4, command=app.destroy)
 
     ctk.CTkButton(
         cart_btn_frame, text="Add to Cart", corner_radius=10,
@@ -621,24 +691,6 @@ def start_main_ui():
         cart_btn_frame, text="Clear Cart", corner_radius=10,
         fg_color="red", hover_color="#9b1c1c", command=clear_cart
     ).grid(row=0, column=2, padx=4, sticky="ew")
-
-    ctk.CTkButton(
-        cart_btn_frame,
-        text="Delete Product",
-        corner_radius=10,
-        fg_color="#b91c1c",
-        hover_color="#7f1111",
-        command=delete_selected_product,
-    ).grid(row=1, column=0, columnspan=3, padx=4, pady=(6, 2), sticky="ew")
-
-    ctk.CTkButton(
-        cart_btn_frame,
-        text="Add Stock",
-        corner_radius=10,
-        fg_color="orange",
-        hover_color="#cc8400",
-        command=add_stock_popup,
-    ).grid(row=2, column=0, columnspan=3, padx=4, pady=6, sticky="ew")
 
     render_cart_ui()
     refresh_total()

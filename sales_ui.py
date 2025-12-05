@@ -1,9 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 import datetime
-from db import get_connection, get_products
-from sale import get_sales_history
-
+from db import get_connection
 
 def open_sales_window():
     window = ctk.CTkToplevel()
@@ -20,7 +18,6 @@ def open_sales_window():
     window.focus_force()
     window.grab_set()
 
-    # MAIN FRAME
     main = ctk.CTkFrame(window, corner_radius=16)
     main.pack(fill="both", expand=True, padx=16, pady=16)
 
@@ -34,9 +31,6 @@ def open_sales_window():
     tabs.add("Summary")
     tabs.add("Reports")
 
-    # -------------------------------
-    # TAB 1: SALES LOG
-    # -------------------------------
     log_box = ctk.CTkTextbox(tabs.tab("Sales Log"))
     log_box.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -47,11 +41,16 @@ def open_sales_window():
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT s.id, p.name AS product, s.quantity, s.total, s.date
+            SELECT s.id,
+                s.product_name AS product,
+                s.quantity,
+                s.total,
+                s.date,
+                s.customer_name
             FROM sales s
-            JOIN products p ON s.product_id = p.id
             ORDER BY s.date DESC
         """)
+
         rows = cursor.fetchall()
         conn.close()
 
@@ -59,18 +58,16 @@ def open_sales_window():
             log_box.insert("end", "No sales recorded yet.")
         else:
             for r in rows:
-                log_box.insert(
-                    "end",
-                    f"{r['date']}  |  {r['product']} x{r['quantity']}  = ₱{r['total']:.2f}\n"
-                )
+                    log_box.insert(
+                        "end",
+                        f"{r['date']} | Customer: {r['customer_name']} | "
+                        f"{r['product']} x{r['quantity']} = ₱{r['total']:.2f}\n"
+                    )
 
         log_box.configure(state="disabled")
 
     render_sales_log()
 
-    # -------------------------------
-    # TAB 2: SUMMARY
-    # -------------------------------
     summary_box = ctk.CTkTextbox(tabs.tab("Summary"))
     summary_box.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -82,14 +79,14 @@ def open_sales_window():
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT p.name AS product,
-                   SUM(s.quantity) AS qty_sold,
-                   SUM(s.total) AS revenue
-            FROM sales s
-            JOIN products p ON s.product_id = p.id
-            GROUP BY s.product_id
+            SELECT product_name AS product,
+                SUM(quantity) AS qty_sold,
+                SUM(total) AS revenue
+            FROM sales
+            GROUP BY product_name
             ORDER BY revenue DESC
         """)
+
         rows = cursor.fetchall()
         conn.close()
 
@@ -108,9 +105,6 @@ def open_sales_window():
 
     render_summary()
 
-    # -------------------------------
-    # TAB 3: REPORTS (Daily / Weekly / Monthly)
-    # -------------------------------
     report_frame = ctk.CTkFrame(tabs.tab("Reports"))
     report_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -127,25 +121,28 @@ def open_sales_window():
 
         if period == "Daily":
             start = today.strftime("%Y-%m-%d")
-            cursor.execute("""SELECT s.*, p.name AS product 
-                              FROM sales s 
-                              JOIN products p ON s.product_id=p.id
-                              WHERE substr(s.date,1,10)=?""", (start,))
+            cursor.execute("""
+                SELECT *
+                FROM sales
+                WHERE substr(date, 1, 10) = ?
+            """, (start,))
+
         elif period == "Weekly":
             start = today - datetime.timedelta(days=today.weekday())
             end = start + datetime.timedelta(days=6)
-            cursor.execute("""SELECT s.*, p.name AS product 
-                              FROM sales s 
-                              JOIN products p ON s.product_id=p.id
-                              WHERE date(substr(s.date,1,10)) BETWEEN ? AND ?""",
-                           (start, end))
-        else:  # Monthly
+            cursor.execute("""
+                SELECT *
+                FROM sales
+                WHERE date(substr(date,1,10)) BETWEEN ? AND ?
+            """, (start, end))
+
+        else:
             month = today.strftime("%Y-%m")
-            cursor.execute("""SELECT s.*, p.name AS product 
-                              FROM sales s 
-                              JOIN products p ON s.product_id=p.id
-                              WHERE substr(s.date,1,7)=?""",
-                           (month,))
+            cursor.execute("""
+                SELECT *
+                FROM sales
+                WHERE substr(date, 1, 7) = ?
+            """, (month,))
 
         rows = cursor.fetchall()
         conn.close()
@@ -159,14 +156,15 @@ def open_sales_window():
             for r in rows:
                 report_box.insert(
                     "end",
-                    f"{r['date']} — {r['product']} x{r['quantity']} = ₱{r['total']:.2f}\n"
+                    f"{r['date']} — {r['product_name']} x{r['quantity']} = ₱{r['total']:.2f}\n"
                 )
+
             report_box.insert("end", "-" * 50 + "\n")
             report_box.insert("end", f"TOTAL {period.upper()} SALES: ₱{total:.2f}")
 
         report_box.configure(state="disabled")
 
-    # Report Buttons
+   
     btn_frame = ctk.CTkFrame(report_frame, fg_color="transparent")
     btn_frame.pack(pady=8)
 
@@ -178,4 +176,3 @@ def open_sales_window():
 
     ctk.CTkButton(btn_frame, text="Monthly", width=100,
                   command=lambda: generate_report("Monthly")).grid(row=0, column=2, padx=5)
-

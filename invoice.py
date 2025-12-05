@@ -8,19 +8,17 @@ class InvoicePDF:
         self,
         invoice_number,
         date_str,
+        customer_name,
         items,
         final_total,
         payment_method,
         paid_amount,
-        change_amount,
-        discount_type=None,
-        discount_amount=0.0
+        change_amount
     ):
+        self.customer_name = customer_name
         self.invoice_number = invoice_number
         self.date_str = date_str
         self.items = items
-        self.discount_type = discount_type or "NONE"
-        self.discount_amount = float(discount_amount)
         self.final_total = float(final_total)
         self.original_total = sum(i["total"] for i in items)
         self.payment_method = payment_method
@@ -49,6 +47,9 @@ class InvoicePDF:
         c.setFont("Helvetica", 11)
         c.drawString(50, y, f"Date: {self.date_str}")
         y -= 30
+
+        c.drawString(50, y, f"Customer: {self.customer_name}")
+        y -= 25
 
         c.setFont("Helvetica-Bold", 12)
         c.drawString(50, y, "Item")
@@ -88,12 +89,6 @@ class InvoicePDF:
         c.drawString(50, y, f"Original Total: ₱{self.original_total:.2f}")
         y -= 18
 
-        if self.discount_amount > 0:
-            c.drawString(50, y, f"Discount Type: {self.discount_type}")
-            y -= 18
-            c.drawString(50, y, f"Discount Amount: -₱{self.discount_amount:.2f}")
-            y -= 18
-
         c.drawString(50, y, f"FINAL TOTAL: ₱{self.final_total:.2f}")
         y -= 25
 
@@ -119,23 +114,23 @@ class InvoicePDF:
 def generate_invoice_pdf(
     invoice_number,
     date_str,
+    customer_name,
     items,
     final_total,
     payment_method,
     paid_amount,
     change_amount,
-    discount_type=None,
-    discount_amount=0.0
 ):
+
     pdf = InvoicePDF(
         invoice_number,
         date_str,
+        customer_name,
         items,
         final_total,
         payment_method,
         paid_amount,
         change_amount,
-        discount_type,
-        discount_amount
     )
+
     return pdf.generate()
