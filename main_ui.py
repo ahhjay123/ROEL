@@ -673,9 +673,9 @@ def start_main_ui():
         ).pack(fill="x", pady=6)
 
     _sidebar_button("🧾", 1, command=open_history_window)
-    _sidebar_button("🛠️", 2, command=open_product_management)
-    _sidebar_button("📊", 3, command=open_sales_window)
-    _sidebar_button("🚪", 4, command=app.destroy)
+    _sidebar_button("🛠️", 3, command=open_product_management)
+    _sidebar_button("📊", 4, command=open_sales_window)
+    _sidebar_button("🚪", 2, command=app.destroy)
 
     ctk.CTkButton(
         cart_btn_frame, text="Add to Cart", corner_radius=10,
