@@ -10,19 +10,16 @@ SALES_FILE = os.path.join(BASE_DIR, "sales_history.json")
 class Invoice:
     def __init__(
         self,
+        customer_name,
         items,
         final_total,
         payment_method,
         paid_amount,
         change_amount,
-        discount_type=None,
-        discount_amount=0.0,
     ):
+        self.customer_name = customer_name
         self.items = items
         self.original_total = sum(i[2] for i in items)
-        self.discount_type = discount_type or "NONE"
-        self.discount_amount = float(discount_amount)
-        self.discount_applied = self.discount_amount > 0
         self.total_amount = float(final_total)
         self.payment_method = payment_method
         self.paid_amount = float(paid_amount)
@@ -33,15 +30,13 @@ class Invoice:
     def to_dict(self):
         return {
             "invoice_no": self.invoice_no,
+            "customer_name": self.customer_name,
             "date": self.date,
             "items": [
                 {"product": n, "quantity": q, "total": t}
                 for (n, q, t) in self.items
             ],
             "original_total": self.original_total,
-            "discount_type": self.discount_type,
-            "discount_amount": self.discount_amount,
-            "discount_applied": self.discount_applied,
             "total": self.total_amount,
             "payment_method": self.payment_method,
             "paid": self.paid_amount,
@@ -78,25 +73,17 @@ class SaleManager:
         nxt = max(nums) + 1 if nums else 1
         return f"INV-{nxt:04d}"
 
-    def save_invoice(
-        self,
-        items,
-        final_total,
-        payment_method,
-        paid,
-        change,
-        discount_type,
-        discount_amount
-    ):
+    def save_invoice(self, customer_name, items, final_total, payment_method, paid, change):
+
         invoice = Invoice(
+            customer_name,
             items,
             final_total,
             payment_method,
             paid,
             change,
-            discount_type,
-            discount_amount
         )
+
 
         invoice.invoice_no = self._next_invoice()
 
@@ -110,6 +97,7 @@ class SaleManager:
                     product["id"],
                     qty,
                     line_total,
+                    invoice.customer_name,
                     invoice.date
                 )
 
@@ -118,22 +106,20 @@ class SaleManager:
 _SALE_MANAGER = SaleManager(SALES_FILE)
 
 def save_invoice(
+    customer_name,
     items,
     final_total,
     payment_method,
     paid,
-    change,
-    discount_type,
-    discount_amount
+    change
 ):
     return _SALE_MANAGER.save_invoice(
+        customer_name,
         items,
         final_total,
         payment_method,
         paid,
-        change,
-        discount_type,
-        discount_amount
+        change
     )
 
 def get_sales_history():

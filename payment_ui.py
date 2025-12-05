@@ -49,8 +49,7 @@ def ask_payment_method(total_amount, callback):
         if method == "Cash":
             ask_cash_amount(total_amount, callback)
         else:
-            callback(method, total_amount, 0.00, None, 0.0)
-
+            callback(method, total_amount, 0.00)
 
     ctk.CTkButton(btn_row, text="💵  Cash", height=40,
         corner_radius=10, command=lambda: pay("Cash")).grid(row=0, column=0, padx=4)
@@ -111,7 +110,7 @@ def ask_cash_amount(total_amount, callback):
         change = round(cash - total_amount, 2)
 
         window.destroy()
-        callback("Cash", cash, change, None, 0.0)
+        callback("Cash", cash, change)
         
     ctk.CTkButton(
         main,

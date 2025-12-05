@@ -20,7 +20,6 @@ def open_sales_window():
     window.focus_force()
     window.grab_set()
 
-    # MAIN FRAME
     main = ctk.CTkFrame(window, corner_radius=16)
     main.pack(fill="both", expand=True, padx=16, pady=16)
 
@@ -34,9 +33,6 @@ def open_sales_window():
     tabs.add("Summary")
     tabs.add("Reports")
 
-    # -------------------------------
-    # TAB 1: SALES LOG
-    # -------------------------------
     log_box = ctk.CTkTextbox(tabs.tab("Sales Log"))
     log_box.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -68,9 +64,6 @@ def open_sales_window():
 
     render_sales_log()
 
-    # -------------------------------
-    # TAB 2: SUMMARY
-    # -------------------------------
     summary_box = ctk.CTkTextbox(tabs.tab("Summary"))
     summary_box.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -108,9 +101,6 @@ def open_sales_window():
 
     render_summary()
 
-    # -------------------------------
-    # TAB 3: REPORTS (Daily / Weekly / Monthly)
-    # -------------------------------
     report_frame = ctk.CTkFrame(tabs.tab("Reports"))
     report_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -139,7 +129,7 @@ def open_sales_window():
                               JOIN products p ON s.product_id=p.id
                               WHERE date(substr(s.date,1,10)) BETWEEN ? AND ?""",
                            (start, end))
-        else:  # Monthly
+        else: 
             month = today.strftime("%Y-%m")
             cursor.execute("""SELECT s.*, p.name AS product 
                               FROM sales s 
@@ -166,7 +156,6 @@ def open_sales_window():
 
         report_box.configure(state="disabled")
 
-    # Report Buttons
     btn_frame = ctk.CTkFrame(report_frame, fg_color="transparent")
     btn_frame.pack(pady=8)
 
@@ -178,4 +167,3 @@ def open_sales_window():
 
     ctk.CTkButton(btn_frame, text="Monthly", width=100,
                   command=lambda: generate_report("Monthly")).grid(row=0, column=2, padx=5)
-

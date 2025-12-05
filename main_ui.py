@@ -208,8 +208,16 @@ def start_main_ui():
     )
     total_label.grid(row=2, column=0, sticky="e", padx=12, pady=(0, 8))
 
+    customer_name_entry = ctk.CTkEntry(
+        cart_panel,
+        placeholder_text="Customer Name",
+        height=35,
+        corner_radius=8,
+    )
+    customer_name_entry.grid(row=3, column=0, padx=12, pady=(0, 10), sticky="ew")
+
     cart_btn_frame = ctk.CTkFrame(cart_panel, fg_color="transparent")
-    cart_btn_frame.grid(row=3, column=0, padx=8, pady=(0, 10), sticky="ew")
+    cart_btn_frame.grid(row=4, column=0, padx=8, pady=(0, 10), sticky="ew")
     cart_btn_frame.grid_rowconfigure((0, 1), weight=0)
     cart_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
@@ -255,7 +263,6 @@ def start_main_ui():
                 font=("Arial", 12),
             ).grid(row=1, column=0, sticky="w", padx=8, pady=(0, 6))
 
-            # NEW REMOVE BUTTON
             def remove_item(i=idx):
                 cart.remove(i)
                 render_cart_ui()
@@ -479,27 +486,28 @@ def start_main_ui():
         refresh_total()
 
     def checkout():
-        if not cart.items:
-            messagebox.showerror("Error", "Cart is empty.")
+        customer_name = customer_name_entry.get().strip()
+        if not customer_name:
+            messagebox.showerror("Error", "Please enter customer name.")
             return
 
         total = cart.get_total()
         items = cart.items.copy()
 
-        def finished(method, paid, change, discount_type, discount_amount):
+        def finished(method, paid, change):
             from receipt_ui import open_receipt_window
 
-            final_total = total - discount_amount
+            final_total = total
 
             invoice_no = save_invoice(
+                customer_name,
                 items,
                 final_total,
                 method,
                 paid,
                 change,
-                discount_type,
-                discount_amount
             )
+
 
             for name, qty, _ in items:
                 try:
@@ -515,7 +523,6 @@ def start_main_ui():
                 generate_invoice_pdf(
                     invoice_no, date, items_dict,
                     final_total, method, paid, change,
-                    discount_type, discount_amount
                 )
             except Exception:
                 pass
@@ -526,10 +533,10 @@ def start_main_ui():
             build_product_cards(current_category["value"])
 
             open_receipt_window(
-                invoice_no, date, items,
-                final_total, method, paid, change,
-                discount_type, discount_amount
-            )
+            invoice_no, date, customer_name, items,
+            final_total, method, paid, change,
+        )
+
 
         ask_payment_method(total, finished)
 
@@ -612,6 +619,7 @@ def start_main_ui():
         selected_product_name["name"] = None
         update_selected_preview()
         build_product_cards(current_category["value"])
+
     
     def open_product_management():
         pm_window = ctk.CTkToplevel()

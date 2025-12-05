@@ -113,13 +113,14 @@ def open_history_window():
             return
 
         for inv in filtered:
-            history_box.insert(
-                "end",
-                f"Invoice: {inv.get('invoice_no')} | "
-                f"Date: {inv.get('date')} | "
-                f"Total: ₱{inv.get('total'):.2f} | "
-                f"Method: {inv.get('payment_method')}\n"
-            )
+            history_box.insert("end",
+            f"Invoice: {inv.get('invoice_no')} | "
+            f"Customer: {inv.get('customer_name', 'N/A')} | "
+            f"Date: {inv.get('date')} | "
+            f"Total: ₱{inv.get('total', 0):.2f} | "
+            f"Method: {inv.get('payment_method', 'N/A')}\n"
+        )
+
             for it in inv.get("items", []):
                 history_box.insert(
                     "end",
